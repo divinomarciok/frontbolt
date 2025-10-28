@@ -9,17 +9,32 @@ import type {
   Auditoria
 } from '../types';
 
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+console.log('API Base URL:', baseURL);
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  baseURL: baseURL,
   timeout: Number(import.meta.env.VITE_API_TIMEOUT) || 10000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
+api.interceptors.request.use(
+  request => {
+    console.log('API Request:', request.method?.toUpperCase(), request.url);
+    return request;
+  }
+);
+
 api.interceptors.response.use(
-  response => response,
+  response => {
+    console.log('API Response:', response.status, response.config.url, response.data);
+    return response;
+  },
   (error: AxiosError) => {
+    console.error('API Error:', error.message, error.response?.status, error.response?.data);
     if (error.response) {
       const message = (error.response.data as any)?.detail || 'Erro ao processar requisição';
       throw new Error(message);
@@ -33,8 +48,8 @@ api.interceptors.response.use(
 
 export const categoriasApi = {
   listar: async (skip = 0, limit = 100) => {
-    const { data } = await api.get<Categoria[]>('/api/categorias', { params: { skip, limit } });
-    return data;
+    const { data } = await api.get<any>('/api/categorias', { params: { skip, limit } });
+    return data.items || data;
   },
 
   obter: async (id: number) => {
@@ -59,8 +74,8 @@ export const categoriasApi = {
 
 export const regrasApi = {
   listar: async (skip = 0, limit = 100) => {
-    const { data } = await api.get<Regra[]>('/api/regras', { params: { skip, limit } });
-    return data;
+    const { data } = await api.get<any>('/api/regras', { params: { skip, limit } });
+    return data.items || data;
   },
 
   obter: async (id: number) => {
@@ -102,8 +117,8 @@ export const classificacaoApi = {
 
 export const auditoriaApi = {
   listar: async (skip = 0, limit = 100) => {
-    const { data } = await api.get<Auditoria[]>('/api/auditoria', { params: { skip, limit } });
-    return data;
+    const { data } = await api.get<any>('/api/auditoria', { params: { skip, limit } });
+    return data.items || data;
   },
 
   obter: async (id: number) => {
